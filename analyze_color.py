@@ -1,13 +1,12 @@
 from pathlib import Path
-from config import IMAGES_DIR, VALID_EXT
+import numpy as np
+import cv2
 
-def get_first_image(folder=IMAGES_DIR):
-    folder_path = Path(folder)
+def clean_mask(mask, k=5):
+    kernel = np.ones((k, k), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    return mask
 
-    if not folder_path.exists() or not folder_path.is_dir():
-        return None
-
-    for p in sorted(folder_path.rglob("*")):
-        if p.is_file() and p.suffix.lower() in VALID_EXT:
-            return p
-    return None
+def pct(mask):
+    return 100.0 * np.count_nonzero(mask) / mask.size
