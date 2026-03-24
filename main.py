@@ -1,3 +1,4 @@
+from analyze_color import analyze_image_file
 from config import IMAGES_DIR
 from stitch import get_first_image
 
@@ -9,6 +10,10 @@ def main():
     if image_file:
         print(f"Image found: {image_file.name}")
         print(f"Path: {image_file}")
+        results = analyze_image_file(image_file)
+        print(f"Green coverage: {results['green']:.2f}%")
+        print(f"Deep green coverage: {results['deep_green']:.2f}%")
+        print(f"Beige coverage: {results['beige']:.2f}%")
     else:
         print("No images found in the directory.")
 
