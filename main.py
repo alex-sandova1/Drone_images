@@ -1,6 +1,5 @@
-from analyze_color import analyze_image_file
+from analyze_color import analyze_image_file, get_first_image
 from config import IMAGES_DIR
-from stitch import get_first_image
 
 
 def main():

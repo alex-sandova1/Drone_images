@@ -2,16 +2,14 @@ from PIL import Image
 import cv2
 from pathlib import Path
 
-from analyze_color import analyze_image_batch, clean_mask, pct, make_color_mask, analyze_image_file, analyze_land_cover
+from analyze_color import analyze_image_batch, clean_mask, pct, make_color_mask, analyze_image_file, analyze_land_cover, get_first_image, get_image_files
 from config import IMAGES_DIR
-from stitch import get_first_image, get_image_files, save_stitched_image, stitch_first_n_images
 
 
 def main():
     print(f"Searching in: {IMAGES_DIR}")
     image_file = get_first_image()
     image_files = get_image_files()
-    stitch_output_dir = Path(__file__).resolve().parent / "stitch_images_test"
 
     if image_file:
         with Image.open(image_file) as image:
@@ -58,12 +56,16 @@ def main():
         print(f"File beige coverage: {file_results['beige']:.2f}%")
 
         #analyze image batch test block
-        batch_files = image_files[:5]
+        batch_files = image_files
         print(f"\nReached batch analysis test block for {len(batch_files)} images")
         batch_results = analyze_image_batch(batch_files, k=5)
 
-        for result in batch_results:
+        preview_count = min(10, len(batch_results))
+        for result in batch_results[:preview_count]:
             print(f"{result['image_path'].name} -> green: {result['green']:.2f}%, deep green: {result['deep_green']:.2f}%, beige: {result['beige']:.2f}%")
+
+        if len(batch_results) > preview_count:
+            print(f"... ({len(batch_results) - preview_count} more images analyzed)")
 
         avg_green = sum(result["green"] for result in batch_results) / len(batch_results)
         avg_deep_green = sum(result["deep_green"] for result in batch_results) / len(batch_results)
@@ -74,14 +76,6 @@ def main():
         print(f"Average deep green coverage: {avg_deep_green:.2f}%")
         print(f"Average beige coverage: {avg_beige:.2f}%")
 
-        print("\nReached stitching test block")
-        stitched_files, stitched_bgr, stitch_method = stitch_first_n_images(n=5)
-        stitched_path = save_stitched_image(stitched_bgr, stitch_output_dir)
-        print(f"Stitch method used: {stitch_method}")
-        print("Stitched files:")
-        for image_path in stitched_files:
-            print(f"- {image_path.name}")
-        print(f"Stitched output saved to: {stitched_path}")
     else:
         print("No images found in the directory.")
 
