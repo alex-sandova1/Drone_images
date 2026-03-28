@@ -10,9 +10,10 @@ def main():
         print(f"Image found: {image_file.name}")
         print(f"Path: {image_file}")
         results = analyze_image_file(image_file)
-        print(f"Green coverage: {results['green']:.2f}%")
-        print(f"Deep green coverage: {results['deep_green']:.2f}%")
-        print(f"Beige coverage: {results['beige']:.2f}%")
+        print(f"Grass coverage: {results['grass']:.2f}%")
+        print(f"Tree coverage: {results['tree']:.2f}%")
+        print(f"Sand coverage: {results['sand']:.2f}%")
+        print(f"Road coverage: {results['road']:.2f}%")
     else:
         print("No images found in the directory.")
 

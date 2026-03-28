@@ -31,40 +31,68 @@ def pct(mask):
     return 100.0 * np.count_nonzero(mask) / mask.size
 
 
-def make_color_mask(bgr):   #creates masks for green, deep green, and beige
+def save_mask_images(image_file, bgr, grass, tree, sand, road, out_dir=Path("mask_outputs")):
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stem = Path(image_file).stem
+
+    cv2.imwrite(str(out_dir / f"{stem}_grass_mask.png"), grass)
+    cv2.imwrite(str(out_dir / f"{stem}_tree_mask.png"), tree)
+    cv2.imwrite(str(out_dir / f"{stem}_sand_mask.png"), sand)
+    cv2.imwrite(str(out_dir / f"{stem}_road_mask.png"), road)
+
+    overlay = np.zeros_like(bgr)
+    overlay[grass > 0] = (0, 220, 0)      # green
+    overlay[tree > 0]  = (0, 100, 0)      # dark green
+    overlay[sand > 0]  = (170, 220, 240)  # beige
+    overlay[road > 0]  = (120, 120, 120)  # gray
+
+    blended = cv2.addWeighted(bgr, 0.6, overlay, 0.4, 0)
+
+    cv2.imwrite(str(out_dir / f"{stem}_overlay.png"), overlay)
+    cv2.imwrite(str(out_dir / f"{stem}_blended.png"), blended)
+
+    print(f"Mask images saved to: {out_dir.resolve()}")
+
+
+def make_color_mask(bgr):   #creates masks for grass, tree, and sand
     hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)  #turns image to HSV for easier color segmentation
     
     #Defines color parameters
-    green_low = np.array([35,40,40], dtype=np.uint8)
-    green_high = np.array([90,255,255], dtype=np.uint8)
+    grass_low = np.array([35,40,40], dtype=np.uint8)
+    grass_high = np.array([90,255,255], dtype=np.uint8)
     
-    deep_green_low = np.array([35,80,25], dtype=np.uint8)
-    deep_green_high = np.array([90,255,120], dtype=np.uint8)
+    tree_low = np.array([35,80,25], dtype=np.uint8)
+    tree_high = np.array([90,255,120], dtype=np.uint8)
     
-    beige_low = np.array([15,20,100], dtype=np.uint8)
-    beige_high = np.array([35,160,255], dtype=np.uint8)
+    sand_low = np.array([15,20,100], dtype=np.uint8)
+    sand_high = np.array([35,160,255], dtype=np.uint8)
+    
+    road_low = np.array([0,0,55], dtype=np.uint8)
+    road_high = np.array([179,70,140], dtype=np.uint8)
     
     #creates masks
-    green = cv2.inRange(hsv, green_low, green_high)
-    deep_green = cv2.inRange(hsv, deep_green_low, deep_green_high)
-    beige = cv2.inRange(hsv, beige_low, beige_high)
-    
-    return green, deep_green, beige
+    grass = cv2.inRange(hsv, grass_low, grass_high)
+    tree = cv2.inRange(hsv, tree_low, tree_high)
+    sand = cv2.inRange(hsv, sand_low, sand_high)
+    road = cv2.inRange(hsv, road_low, road_high)
+    return grass, tree, sand, road
 
 
 def analyze_land_cover(bgr, k=5):   #pipeline function 
     if bgr is None or bgr.size == 0:
         raise ValueError("Input image is empty or could not be read.")
 
-    green, deep_green, beige = make_color_mask(bgr)
-    green = clean_mask(green, k=k)
-    deep_green = clean_mask(deep_green, k=k)
-    beige = clean_mask(beige, k=k)
+    grass, tree, sand, road = make_color_mask(bgr)
+    grass = clean_mask(grass, k=k)
+    tree = clean_mask(tree, k=k)
+    sand = clean_mask(sand, k=k)
+    road = clean_mask(road, k=k)
     
     return {
-        "green": pct(green),
-        "deep_green": pct(deep_green),
-        "beige": pct(beige)
+        "grass": pct(grass),
+        "tree": pct(tree),
+        "sand": pct(sand),
+        "road": pct(road),
     }
 
 
